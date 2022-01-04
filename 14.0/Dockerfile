@@ -60,8 +60,8 @@ RUN apt-get update \
 RUN python3 -m pip install --upgrade setuptools \
     && python3 -m pip install --no-cache-dir -r /opt/odoo/${ODOO_VERSION}/requirements.txt \
     && python3 -m pip install --no-cache-dir -r /requirements.txt \
-    && python3 -m pip freeze \
-    && python3 -m pip install --no-cache-dir -e /opt/odoo/${ODOO_VERSION}/ \
+    && cd /opt/odoo/${ODOO_VERSION}/ \
+    && python3 setup.py install \
     && find . -type f -name "*.py[co]" -delete \
     && find . -type d -name "__pycache__" -delete \
     && rm -rf /var/lib/apt/lists/*
