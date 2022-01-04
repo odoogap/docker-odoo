@@ -1,6 +1,6 @@
-FROM debian:bullseye-slim as odoo-compile
+FROM debian:buster-slim as odoo-compile
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
-ENV ODOO_VERSION 15.0
+ENV ODOO_VERSION 14.0
 
 COPY ./requirements.txt /
 
@@ -12,9 +12,15 @@ RUN apt-get update \
         python3-venv \
         python3-wheel \
         libxslt1-dev \
+        libffi-dev \
+        libsasl2-dev \
+        libldap2-dev \
+        libssl-dev \
+        libpq-dev \
         build-essential \
         gcc \
     && python3 -m pip install --upgrade pip \
+    && python3 -m pip --version \
     && python3 -m venv /opt/venv \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,17 +30,16 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        curl \
         dirmngr \
         fonts-noto-cjk \
+        gnupg \
         libssl-dev \
         node-less \
-        libzip-dev \
-        libldap2-dev \
-        libsasl2-dev \
-        libpq-dev \
-        libffi-dev \
+        npm \
         python3-num2words \
         python3-pdfminer \
+        python3-pip \
         python3-phonenumbers \
         python3-pyldap \
         python3-qrcode \
@@ -52,15 +57,17 @@ RUN apt-get update \
     && mv /opt/odoo/odoo-${ODOO_VERSION} /opt/odoo/${ODOO_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir -r /opt/odoo/${ODOO_VERSION}/requirements.txt \
-    && pip install --no-cache-dir -r /requirements.txt \
-    && pip install --no-cache-dir -e /opt/odoo/${ODOO_VERSION}/ \
+RUN python3 -m pip install --upgrade setuptools \
+    && python3 -m pip install --no-cache-dir -r /opt/odoo/${ODOO_VERSION}/requirements.txt \
+    && python3 -m pip install --no-cache-dir -r /requirements.txt \
+    && python3 -m pip freeze \
+    && python3 -m pip install --no-cache-dir -e /opt/odoo/${ODOO_VERSION}/ \
     && find . -type f -name "*.py[co]" -delete \
     && find . -type d -name "__pycache__" -delete \
     && rm -rf /var/lib/apt/lists/*
 
 
-FROM debian:bullseye-slim as odoo-build
+FROM debian:buster-slim as odoo-build
 LABEL OdooGAP <info@odoogap.com>
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
@@ -83,7 +90,7 @@ RUN apt-get update \
         curl \
         npm \
         node-less \
-    && echo 'deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main' > /etc/apt/sources.list.d/pgdg.list \
+    && echo 'deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main' > /etc/apt/sources.list.d/pgdg.list \
     && GNUPGHOME="$(mktemp -d)" \
     && export GNUPGHOME \
     && repokey='B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8' \
